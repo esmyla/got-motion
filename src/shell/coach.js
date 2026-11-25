@@ -41,10 +41,21 @@ const LINES = {
     'Swipe the number to delete a digit. Precision matters.',
     'Open the extra functions. Press “sin.” Nobody will ask.',
   ],
+  chat: [
+    'Type with both thumbs. Urgency.',
+    'Smile slightly at the screen. Someone said something.',
+    'Sigh, then type faster.',
+    'Stop. Delete all of it. Start again.',
+    'Laugh once through your nose, then reply.',
+    'Look up, think, look down, send.',
+    'Check another conversation. You are in demand.',
+    'Hold the phone closer. This one is private.',
+  ],
+  sent: ['Sent. Now watch the screen like it owes you something.', 'Good. Put the phone down. Pick it straight back up.'],
   idle: [
     'You have stopped moving. Statues attract conversation.',
     'No input for twelve seconds. People are starting to look.',
-    'Do something. Anything. Tap a number.',
+    'Do something. Anything. Tap something.',
     'A still thumb is a guilty thumb.',
     'You are just holding a phone now. Swipe.',
   ],
@@ -100,7 +111,7 @@ function show(options) {
     if (options.kind === 'award' || options.keep) pending = options;
     return;
   }
-  const { label = 'Stage direction', text, sub, kind = 'coach', ms = 4600 } = options;
+  const { label = 'Stage direction', text, sub, kind = 'coach', ms = 4600, onTap } = options;
   const el = h(
     'button',
     { class: 'banner', type: 'button', dataset: { kind }, 'aria-label': `${label}: ${text}` },
@@ -123,7 +134,9 @@ function show(options) {
     onEnd: ({ dy }) => {
       el.style.transition = '';
       el.style.transform = '';
-      if (dy < -14 || Math.abs(dy) < 6) dismiss(banner);
+      const tapped = Math.abs(dy) < 6;
+      if (dy < -14 || tapped) dismiss(banner);
+      if (tapped) onTap?.();
     },
   });
 }
@@ -144,7 +157,16 @@ export const coach = {
     show({ label: 'Tip', text, ms, keep: true });
   },
 
-  /** Which fake app is on screen ('weather' | 'calc'), or null on the home screen. */
+  /**
+   * A notification that belongs to the cover story, such as an incoming text. Unlike stage
+   * directions it still shows in over-the-shoulder mode. Tapping it runs `onTap`.
+   */
+  notify({ label, text, onTap, ms = 4200, keep = false }) {
+    // `keep` queues it behind whatever banner is showing instead of dropping it.
+    show({ label, text, kind: 'message', ms, onTap, keep });
+  },
+
+  /** Which fake app is on screen ('weather' | 'calc' | 'chat'), or null on the home screen. */
   setContext(next) {
     context = next;
     lastInputAt = Date.now();

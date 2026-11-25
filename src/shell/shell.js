@@ -1,4 +1,4 @@
-// Navigation between the home screen and the two fake apps, the swipeable home bar,
+// Navigation between the home screen and the three fake apps, the swipeable home bar,
 // and the bookkeeping that feeds the busyness report.
 
 import { animate, clamp, settle, themeColor } from '../lib/dom.js';
@@ -10,9 +10,9 @@ import { coach } from './coach.js';
 
 const EASE = 'cubic-bezier(0.2, 0.9, 0.25, 1)';
 const FULL = 'inset(0px 0px 0px 0px round 0px)';
-const GAP = 18; // space between the two apps while sliding from one to the other
-const IDS = ['weather', 'calc'];
-const TITLES = { weather: 'Weather', calc: 'Calculator' };
+const GAP = 18; // space between two apps while sliding from one to the other
+const IDS = ['weather', 'calc', 'chat'];
+const TITLES = { weather: 'Weather', calc: 'Calculator', chat: 'Messages' };
 const HOME_COLOR = '#0e0f13';
 
 export function createShell({ apps, home }) {
@@ -23,9 +23,22 @@ export function createShell({ apps, home }) {
   let current = null;
   let busy = false;
   let closeOptions = null;
+  let leaving = false; // true while a swipe-up (not the phone's back gesture) is closing the app
+  const visited = new Set();
 
-  const instance = (id) => (apps[id].instance ||= apps[id].create(apps[id].el));
-  const otherOf = (id) => IDS.find((x) => x !== id);
+  // What an app is told about the rest of the phone.
+  const ctx = { current: () => current, goTo: (id) => goTo(id) };
+  const instance = (id) => (apps[id].instance ||= apps[id].create(apps[id].el, ctx));
+  /** The app one swipe to the right (+1) or left (-1), wrapping round. */
+  const neighbor = (id, step) => IDS[(IDS.indexOf(id) + step + IDS.length) % IDS.length];
+
+  function arrived(id) {
+    visited.add(id);
+    if (visited.size === IDS.length && !visited.has('all')) {
+      visited.add('all');
+      bump('trifecta');
+    }
+  }
 
   /** The home-screen tile an app grows out of and shrinks back into, as a clip-path. */
   function clipFor(id) {
@@ -34,7 +47,7 @@ export function createShell({ apps, home }) {
     if (!r || !r.width) return 'inset(40% 30% 40% 30% round 30px)';
     const top = clamp(r.top - d.top, 0, d.height);
     const bottom = clamp(d.bottom - r.bottom, 0, d.height);
-    return `inset(${top}px ${d.right - r.right}px ${bottom}px ${r.left - d.left}px round 30px)`;
+    return `inset(${top}px ${d.right - r.right}px ${bottom}px ${r.left - d.left}px round 24px)`;
   }
 
   async function open(id, { instant = false, push = true } = {}) {
@@ -60,6 +73,7 @@ export function createShell({ apps, home }) {
     bar.hidden = false;
     document.title = TITLES[id];
     coach.setContext(id);
+    arrived(id);
     busy = false;
     tips(id);
   }
@@ -126,6 +140,7 @@ export function createShell({ apps, home }) {
     current = id;
     history.replaceState({ app: id }, '', `#${id}`);
     coach.setContext(id);
+    arrived(id);
     if (record) {
       bump('switches');
       coach.event('switch', { chance: 0.6 });
@@ -133,11 +148,19 @@ export function createShell({ apps, home }) {
     busy = false;
   }
 
+  /** Open an app from anywhere: a notification tap uses this. */
+  function goTo(id) {
+    if (!apps[id] || current === id) return;
+    if (current) switchTo(id, 1);
+    else open(id);
+  }
+
   /** Leave the current app. Goes through history so the phone's back gesture does the same thing. */
   function requestClose(options) {
     if (busy || !current) return;
     if (history.state && history.state.app) {
       closeOptions = options || null;
+      leaving = true;
       history.back();
     } else {
       history.replaceState(null, '', window.location.pathname + window.location.search);
@@ -152,12 +175,17 @@ export function createShell({ apps, home }) {
     }
     const target = history.state?.app;
     const options = closeOptions;
+    const swipedAway = leaving;
     closeOptions = null;
-    // The phone's back gesture with a sheet or the radar open should only close that.
-    if (current && sheetIsOpen() && !(target && apps[target])) {
-      history.pushState({ app: current }, '', `#${current}`);
-      closeTopSheet();
-      return;
+    leaving = false;
+    // The phone's back gesture should first close whatever is open on top: a sheet, the
+    // radar, a conversation. Only then does it leave the app.
+    if (current && !swipedAway && !(target && apps[target])) {
+      const handled = sheetIsOpen() ? closeTopSheet() : apps[current].instance.back?.();
+      if (handled) {
+        history.pushState({ app: current }, '', `#${current}`);
+        return;
+      }
     }
     if (target && apps[target]) {
       if (!current) open(target, { push: false });
@@ -175,6 +203,8 @@ export function createShell({ apps, home }) {
     }
     if (id === 'calc' && firstTime('tip-mash')) {
       coach.tip('Mash mode is on. Hit any keys at all. The math writes itself.');
+    } else if (id === 'chat' && firstTime('tip-chat')) {
+      coach.tip('Open a conversation, tap the message box and hit any keys. The texts write themselves.');
     } else if (id === 'weather' && firstTime('tip-weather')) {
       coach.tip('Swipe sideways for more situations. Pull down to refresh. Tap any card.');
     }
@@ -218,13 +248,24 @@ export function createShell({ apps, home }) {
         if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
         clearTimeout(holdTimer);
         mode = Math.abs(dx) > Math.abs(dy) ? 'side' : 'up';
-        if (mode === 'side') {
-          other = otherOf(current);
-          apps[other].el.hidden = false;
-          instance(other).show();
-        } else {
+        if (mode === 'up') {
           home.refresh();
           home.el.style.visibility = '';
+        }
+      }
+      if (mode === 'side' && dx !== 0) {
+        // Swiping left brings in the next app, right the previous one. Changing direction
+        // mid-swipe swaps which neighbour is waiting at the edge.
+        const wanted = neighbor(current, dx < 0 ? 1 : -1);
+        if (wanted !== other) {
+          if (other) {
+            apps[other].el.hidden = true;
+            apps[other].el.style.transform = '';
+            apps[other].instance.hide();
+          }
+          other = wanted;
+          apps[other].el.hidden = false;
+          instance(other).show();
         }
       }
       if (mode === 'up') {
@@ -233,7 +274,7 @@ export function createShell({ apps, home }) {
         el.style.borderRadius = `${p * 40}px`;
         home.el.style.opacity = String(0.25 + p * 0.55);
         home.el.style.transform = `scale(${0.93 + p * 0.05})`;
-      } else {
+      } else if (other) {
         const width = device.clientWidth + GAP;
         el.style.transform = `translateX(${dx}px)`;
         apps[other].el.style.transform = `translateX(${dx + (dx < 0 ? width : -width)}px)`;
@@ -272,6 +313,10 @@ export function createShell({ apps, home }) {
         home.el.style.visibility = 'hidden';
         settle(moves);
         busy = false;
+        return;
+      }
+      if (!other) {
+        el.style.transform = '';
         return;
       }
       const width = device.clientWidth + GAP;
@@ -355,12 +400,15 @@ export function createShell({ apps, home }) {
 
   window.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
-      if (!closeTopSheet() && current) requestClose();
+      // Esc backs out one level at a time: sheet, then conversation, then the app.
+      if (closeTopSheet()) return;
+      if (current && apps[current].instance?.back?.()) return;
+      if (current) requestClose();
       return;
     }
+    if (current) coach.activity(); // typing in a text box is being busy too
     if (!current || sheetIsOpen() || event.metaKey || event.ctrlKey || event.altKey) return;
     if (event.target.closest?.('input, textarea')) return;
-    coach.activity();
     apps[current].instance?.onKey?.(event);
   });
 
@@ -368,5 +416,5 @@ export function createShell({ apps, home }) {
   const initial = window.location.hash.slice(1);
   if (apps[initial]) open(initial, { instant: true, push: false });
 
-  return { open, requestClose, switchTo, current: () => current, warm: () => IDS.forEach(instance) };
+  return { open, goTo, requestClose, switchTo, current: () => current, warm: () => IDS.forEach(instance) };
 }

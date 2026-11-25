@@ -1,7 +1,7 @@
 {
   "name": "Got Motion",
   "short_name": "Got Motion",
-  "description": "A fake Weather app and a fake Calculator for looking occupied in awkward situations.",
+  "description": "A fake Weather app, Calculator and Messages for looking occupied in awkward situations.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -15,6 +15,7 @@
   ],
   "shortcuts": [
     { "name": "Weather", "short_name": "Weather", "url": "./#weather" },
-    { "name": "Calculator", "short_name": "Calculator", "url": "./#calc" }
+    { "name": "Calculator", "short_name": "Calculator", "url": "./#calc" },
+    { "name": "Messages", "short_name": "Messages", "url": "./#chat" }
   ]
 }

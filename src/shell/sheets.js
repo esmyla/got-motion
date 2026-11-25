@@ -91,6 +91,7 @@ export function openReport() {
         statRow('Distance scrolled', distanceRemark(meters), `${meters < 10 ? meters.toFixed(1) : formatInt(meters)} m`),
         statRow('Weather refreshes', 'Times the weather had changed: 0', formatInt(stats.refreshes)),
         statRow('Calculations', 'Times one was needed: 0', formatInt(stats.calcs)),
+        statRow('Texts sent', 'Replies from real people: 0', formatInt(stats.texts || 0)),
         statRow('App switches', 'Nobody busy uses just one.', formatInt(stats.switches)),
       ),
       h('p', { class: 'section-label', text: `Achievements · ${earned} of ${ACHIEVEMENTS.length}` }),
@@ -152,9 +153,15 @@ export function openSettings() {
         }),
         switchRow({
           title: 'Over-the-shoulder mode',
-          desc: 'Hides every joke so both apps pass inspection. Hold the bar at the bottom of either app for a second to flip it without looking.',
+          desc: 'Hides every joke so all three apps pass inspection. Hold the bar at the bottom of any app for a second to flip it without looking.',
           checked: settings.legit,
           onChange: (value) => setSetting('legit', value),
+        }),
+        switchRow({
+          title: 'Incoming texts',
+          desc: 'People who do not exist text you while you are in Weather or Calculator.',
+          checked: settings.alerts !== false,
+          onChange: (value) => setSetting('alerts', value),
         }),
         canVibrate
           ? switchRow({
@@ -192,18 +199,19 @@ export function openSettings() {
           : 'Add this to your Home Screen: on iPhone tap <b>Share</b>, then <b>Add to Home Screen</b>. On Android open the browser menu and choose <b>Install app</b>. It then opens full screen and works with no signal, which is most elevators.',
       }),
       h('div', { class: 'sheet-actions' }, erase),
-      h('p', { class: 'sheet-note', text: 'Got Motion 0.1. No accounts, no tracking, no actual weather.' }),
+      h('p', { class: 'sheet-note', text: 'Got Motion 0.2. No accounts, no tracking, no actual weather, no actual friends.' }),
     ],
   });
 }
 
 const GUIDE = [
-  ['Open either app with confidence', 'Hesitation reads as idle. Idle people get talked to.'],
+  ['Open any app with confidence', 'Hesitation reads as idle. Idle people get talked to.'],
   ['Swipe between locations', 'As though comparing them. You are not going to any of them.'],
   ['Pull down to refresh', 'Nothing will have changed. Refresh again to be sure.'],
   ['Tap any card for a chart', 'Drag a finger along it. This is the busiest a person can look.'],
   ['In the calculator, hit anything', 'Mash mode types impressive numbers for you. Switch to Math if you ever need a real one.'],
-  ['Swipe the bottom bar sideways', 'It flips between the two apps. Swipe it up to come back here.'],
+  ['In Messages, hit anything', 'Open a conversation and mash the keyboard: a text writes itself and they answer. Switch to Type to say your own piece.'],
+  ['Swipe the bottom bar sideways', 'It flips between the three apps. Swipe it up to come back here.'],
   ['If someone reads over your shoulder', 'Hold the bottom bar for one second. Every joke disappears. Hold again to bring them back.'],
   ['Every twenty seconds, exhale through your nose', 'This is what sells it.'],
 ];
@@ -211,7 +219,7 @@ const GUIDE = [
 export function openGuide() {
   openSheet({
     title: 'Field Guide',
-    subtitle: 'How to look occupied, in eight steps.',
+    subtitle: 'How to look occupied, in nine steps.',
     className: 'is-tall',
     body: h(
       'ol',

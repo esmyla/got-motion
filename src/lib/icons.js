@@ -7,6 +7,8 @@ const line = (body, extra = '') =>
 export const ui = {
   close: line('<path d="M6 6l12 12M18 6L6 18"/>'),
   chevronRight: line('<path d="M9 5l7 7-7 7"/>'),
+  chevronLeft: line('<path d="M15 5l-7 7 7 7"/>'),
+  send: line('<path d="M12 19V5M6 11l6-6 6 6"/>'),
   list: line('<path d="M8 6.5h12M8 12h12M8 17.5h12"/><circle cx="4" cy="6.5" r=".6" fill="currentColor"/><circle cx="4" cy="12" r=".6" fill="currentColor"/><circle cx="4" cy="17.5" r=".6" fill="currentColor"/>'),
   map: line('<path d="M9 4.5L3.5 6.5v13L9 17.5l6 2 5.5-2v-13L15 6.5l-6-2z"/><path d="M9 4.5v13M15 6.5v13"/>'),
   locate: `<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M20.5 3.5L3.8 10.4c-.5.2-.4.9.1 1l6.6 1.9 1.9 6.6c.1.5.8.6 1 .1L20.5 3.5z" fill="currentColor"/></svg>`,

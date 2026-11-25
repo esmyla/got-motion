@@ -1,9 +1,9 @@
 {
   "name": "got-motion",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
-  "description": "A fake Weather app and a fake Calculator for looking occupied in awkward situations. Swipe, scroll and tap with purpose. Runs entirely in your browser.",
+  "description": "A fake Weather app, Calculator and Messages for looking occupied in awkward situations. Swipe, scroll, tap and text with purpose. Runs entirely in your browser.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -15,7 +15,7 @@ const emptyDay = () => ({ ms: 0, taps: 0, swipes: 0 });
 
 function defaults() {
   return {
-    settings: { coach: true, legit: false, haptics: true, unit: 'F' },
+    settings: { coach: true, legit: false, haptics: true, alerts: true, unit: 'F' },
     stats: {
       ms: 0,
       taps: 0,
@@ -28,6 +28,8 @@ function defaults() {
       radarOpens: 0,
       scrubs: 0,
       nice: 0,
+      texts: 0,
+      trifecta: 0,
       placesSeen: {},
     },
     days: {},
@@ -35,6 +37,7 @@ function defaults() {
     seen: {},
     weather: { places: ['elevator', 'party', 'meeting', 'thanksgiving', 'grocery'], custom: [], index: 0 },
     calc: { tape: [], mode: 'mash', sci: false },
+    chat: { mode: 'mash', threads: {} },
   };
 }
 
@@ -202,6 +205,18 @@ export const ACHIEVEMENTS = [
     test: (s) => s.scrollPx * PX_TO_METERS >= 42.2,
   },
   { id: 'nice', name: 'Nice.', desc: 'You know what you calculated.', test: (s) => s.nice >= 1 },
+  {
+    id: 'texter',
+    name: 'Great Communicator',
+    desc: '25 texts sent to people who do not exist.',
+    test: (s) => s.texts >= 25,
+  },
+  {
+    id: 'motion',
+    name: 'Got Motion',
+    desc: 'Weather, calculator and texting in one sitting.',
+    test: (s) => s.trifecta >= 1,
+  },
   {
     id: 'pro',
     name: 'Seasoned Professional',

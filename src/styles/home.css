@@ -10,7 +10,12 @@
 
 .home {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  /* Never wider than a big phone, so the tiles stay phone-sized on small tablets. */
+  width: min(100%, 480px);
+  translate: -50% 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
@@ -93,8 +98,8 @@
 
 .home-tiles {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .tile {
@@ -109,33 +114,33 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  aspect-ratio: 5 / 6;
-  padding: 16px 16px 14px;
-  border-radius: 30px;
+  aspect-ratio: 4 / 5;
+  padding: 11px 11px 10px;
+  border-radius: 24px;
   overflow: hidden;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.08) inset,
-    0 18px 40px rgba(0, 0, 0, 0.35);
+    0 14px 30px rgba(0, 0, 0, 0.35);
   transition: transform 0.25s var(--ease-out);
 }
 
 .tile:active .tile-art {
-  transform: scale(0.965);
+  transform: scale(0.955);
 }
 
 .tile-name {
-  margin-top: 12px;
-  padding: 0 4px;
-  font-size: 17px;
+  margin-top: 10px;
+  padding: 0 2px;
+  font-size: 15.5px;
   font-weight: 700;
   letter-spacing: -0.005em;
 }
 
 .tile-desc {
-  margin-top: 3px;
-  padding: 0 4px;
-  font-size: 13.5px;
-  line-height: 1.35;
+  margin-top: 2px;
+  padding: 0 2px;
+  font-size: 12.5px;
+  line-height: 1.32;
   color: var(--muted);
   text-wrap: pretty;
 }
@@ -147,7 +152,7 @@
 }
 
 .mini-wx-name {
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
@@ -155,26 +160,28 @@
 }
 
 .mini-wx-temp {
-  margin-top: 2px;
-  font-size: clamp(48px, 15.5cqw, 62px);
-  line-height: 1.02;
+  margin-top: 1px;
+  font-size: clamp(32px, 10.6cqw, 42px);
+  line-height: 1.04;
   font-weight: 200;
   letter-spacing: -0.03em;
 }
 
 .mini-wx-cond {
   margin-top: auto;
-  font-size: 13.5px;
+  font-size: clamp(9.5px, 3.05cqw, 11.5px);
   font-weight: 600;
-  line-height: 1.25;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 .mini-wx-range {
-  margin-top: 2px;
-  font-size: 13px;
-  font-weight: 500;
-  white-space: pre;
-  opacity: 0.85;
+  display: none;
 }
 
 /* calculator miniature */
@@ -182,13 +189,13 @@
   background: #0a0b0d;
   font-family: var(--font-round);
   justify-content: flex-end;
-  gap: 12px;
+  gap: 9px;
 }
 
 .mini-calc-number {
   display: block;
   text-align: right;
-  font-size: clamp(26px, 8.4cqw, 34px);
+  font-size: clamp(17px, 5.6cqw, 23px);
   font-weight: 300;
   letter-spacing: -0.02em;
   white-space: nowrap;
@@ -201,11 +208,11 @@
 .mini-calc-keys {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
+  gap: 4px;
 }
 
 .mini-calc-keys i {
-  height: clamp(15px, 4.6cqw, 19px);
+  height: clamp(9px, 3cqw, 12px);
   border-radius: 999px;
   background: #1d2026;
 }
@@ -216,6 +223,75 @@
 
 .mini-calc-keys i.is-op {
   background: var(--go);
+}
+
+/* messages miniature */
+.tile-art-chat {
+  background: #0b0c0f;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.mini-chat-from {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-chat-bubble {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 5px 8px 6px;
+  border-radius: 11px 11px 11px 4px;
+  background: #24272e;
+  font-size: 11px;
+  line-height: 1.25;
+  color: #fff;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.mini-chat-bubble.is-me {
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 11px 11px 4px 11px;
+  background: var(--go);
+}
+
+.mini-chat-bubble.is-me i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--go-ink);
+  opacity: 0.7;
+}
+
+.mini-chat-badge {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  display: grid;
+  place-items: center;
+  min-width: 21px;
+  height: 21px;
+  padding: 0 6px;
+  border-radius: 11px;
+  background: #ff5648;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ------------------------------------------------------------ report card */

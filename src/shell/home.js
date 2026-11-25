@@ -1,6 +1,7 @@
 // The home screen: backstage. The only place the app admits what it is.
 
 import { lastAnswer } from '../calc/calc.js';
+import { inbox, unreadTotal } from '../chat/threads.js';
 import { clamp, formatDuration, formatInt, h } from '../lib/dom.js';
 import { ui } from '../lib/icons.js';
 import { rank, recentDays, state, today } from '../lib/store.js';
@@ -23,6 +24,21 @@ export function createHome(el, { onOpen, onReport, onSettings, onGuide }) {
     Array.from({ length: 16 }, (_, i) => h('i', { class: i % 4 === 3 ? 'is-op' : i < 3 ? 'is-fn' : '' })),
   );
   const calcArt = h('span', { class: 'tile-art tile-art-calc' }, calcNumber, keypad);
+
+  // Messages tile: whoever texted last, and how many are waiting.
+  const chatFrom = h('span', { class: 'mini-chat-from' });
+  const chatText = h('span', { class: 'mini-chat-bubble' });
+  const chatBadge = h('span', { class: 'mini-chat-badge' });
+  const chatArt = h(
+    'span',
+    { class: 'tile-art tile-art-chat' },
+    chatBadge,
+    chatFrom,
+    chatText,
+    h('span', { class: 'mini-chat-bubble is-me', 'aria-hidden': 'true' }, h('i'), h('i'), h('i')),
+  );
+
+  const arts = { weather: wxArt, calc: calcArt, chat: chatArt };
 
   const tile = (id, art, name, desc) =>
     h(
@@ -50,14 +66,15 @@ export function createHome(el, { onOpen, onReport, onSettings, onGuide }) {
         h('h1', { class: 'home-title' }, 'Got Motion', h('span', { class: 'home-title-dot', 'aria-hidden': 'true' })),
         h('p', {
           class: 'home-tag',
-          text: 'Two very important apps for when there is nothing to look at.',
+          text: 'Three very important apps for when there is nothing to look at.',
         }),
       ),
       h(
         'div',
         { class: 'home-tiles' },
-        tile('weather', wxArt, 'Weather', 'Check conditions you can do nothing about.'),
-        tile('calc', calcArt, 'Calculator', 'Perform math nobody asked for.'),
+        tile('weather', wxArt, 'Weather', 'Conditions you can do nothing about.'),
+        tile('calc', calcArt, 'Calculator', 'Math nobody asked for.'),
+        tile('chat', chatArt, 'Messages', 'People who cannot text back.'),
       ),
       h(
         'button',
@@ -87,6 +104,14 @@ export function createHome(el, { onOpen, onReport, onSettings, onGuide }) {
 
     calcNumber.textContent = lastAnswer();
 
+    const [{ contact, thread }] = inbox();
+    const last = thread.messages[thread.messages.length - 1];
+    const waiting = unreadTotal();
+    chatFrom.textContent = contact.name;
+    chatText.textContent = last ? last.text : '';
+    chatBadge.textContent = waiting > 99 ? '99+' : String(waiting);
+    chatBadge.hidden = !waiting;
+
     const day = today();
     reportTime.textContent = formatDuration(day.ms);
     reportCounts.textContent = `${formatInt(day.taps)} taps · ${formatInt(day.swipes)} swipes`;
@@ -111,6 +136,6 @@ export function createHome(el, { onOpen, onReport, onSettings, onGuide }) {
     el,
     refresh,
     /** Screen rectangle of an app's tile artwork: where the app zooms from and back to. */
-    tileRect: (id) => (id === 'weather' ? wxArt : calcArt).getBoundingClientRect(),
+    tileRect: (id) => (arts[id] || wxArt).getBoundingClientRect(),
   };
 }

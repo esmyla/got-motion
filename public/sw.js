@@ -59,7 +59,10 @@ async function refreshPage(cache, request) {
   await prune(cache);
   const response = await fetch(request, { cache: 'no-cache' });
   if (!response.ok) return response;
-  const assets = assetsOf(await response.clone().text());
+  const html = await response.clone().text();
+  const cached = await cache.match(PAGE, LOOKUP);
+  const previous = cached ? await cached.text() : null;
+  const assets = assetsOf(html);
   try {
     await Promise.all(
       assets.map(async (url) => {
@@ -67,6 +70,12 @@ async function refreshPage(cache, request) {
       }),
     );
     await cache.put(PAGE, response.clone());
+    // A newer version is now fully cached. Tell any open page, so it can switch to it
+    // instead of waiting for the app to be closed and opened again.
+    if (previous !== null && previous !== html) {
+      const pages = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (const page of pages) page.postMessage({ type: 'updated' });
+    }
   } catch {
     /* connection dropped mid-update: keep the complete older copy */
   }

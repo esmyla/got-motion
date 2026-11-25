@@ -5,11 +5,16 @@ import './styles/shell.css';
 import './styles/home.css';
 import './styles/calc.css';
 import './styles/weather.css';
+import './styles/chat.css';
 
 import { createCalc } from './calc/calc.js';
+import { createChat } from './chat/chat.js';
 import { h } from './lib/dom.js';
 import { mouseDragScroll } from './lib/gestures.js';
+import { sheetIsOpen } from './lib/sheet.js';
 import { on, settings } from './lib/store.js';
+import { trackKeyboard } from './lib/viewport.js';
+import { coach } from './shell/coach.js';
 import { createHome } from './shell/home.js';
 import { createShell } from './shell/shell.js';
 import { openGuide, openReport, openSettings } from './shell/sheets.js';
@@ -33,6 +38,7 @@ const shell = createShell({
   apps: {
     weather: { el: document.getElementById('app-weather'), create: createWeather },
     calc: { el: document.getElementById('app-calc'), create: createCalc },
+    chat: { el: document.getElementById('app-chat'), create: createChat },
   },
 });
 
@@ -40,6 +46,9 @@ on('settings', (key) => {
   if (key === 'legit') applyLegit();
   if (key === 'legit' || key === 'unit') home.refresh();
 });
+
+// Resize to the space above the phone's keyboard whenever one is showing.
+trackKeyboard(device);
 
 // Sheets live outside the apps, so give them the same drag-with-a-mouse behaviour.
 mouseDragScroll(document.getElementById('overlays'));
@@ -77,7 +86,7 @@ document.getElementById('desk-note').append(
   h('div', { class: 'desk-title', text: 'Got Motion' }),
   h('p', {
     class: 'desk-lede',
-    text: 'A fake Weather app and a fake Calculator, for elevators, parties, and other emergencies.',
+    text: 'A fake Weather app, a fake Calculator and fake Messages, for elevators, parties, and other emergencies.',
   }),
   h(
     'ul',
@@ -85,12 +94,31 @@ document.getElementById('desk-note').append(
     h('li', { text: 'Made for phones. Open this page on yours and add it to your Home Screen.' }),
     h('li', null, 'On a computer, drag with the mouse to swipe and scroll.'),
     h('li', null, h('kbd', { text: 'Esc' }), ' goes home. ', h('kbd', { text: '←' }), ' ', h('kbd', { text: '→' }), ' change location.'),
-    h('li', null, 'In the calculator, type anything on the keyboard.'),
+    h('li', null, 'In the calculator and in Messages, type anything on the keyboard.'),
   ),
 );
 
 // Offline support, in the built app only (it would get in the way of live reload in dev).
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  // The app opens from its offline copy and looks for a newer version in the background.
+  // When one has been fetched: if the app has only just opened and nothing has been touched,
+  // switch to it straight away; otherwise offer it, so nothing is yanked from under a thumb.
+  let touched = false;
+  window.addEventListener('pointerdown', () => (touched = true), { once: true, capture: true });
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data?.type !== 'updated') return;
+    const reload = () => {
+      // Never twice in quick succession, so a misbehaving server cannot cause a reload loop.
+      const last = Number(sessionStorage.getItem('gotmotion:reloaded') || 0);
+      if (Date.now() - last < 30_000) return;
+      sessionStorage.setItem('gotmotion:reloaded', String(Date.now()));
+      window.location.reload();
+    };
+    const untouched = !touched && !shell.current() && !sheetIsOpen() && performance.now() < 10_000;
+    if (untouched) reload();
+    else coach.notify({ label: 'Got Motion', text: 'A new version is ready. Tap to update.', ms: 9000, onTap: reload, keep: true });
+  });
+
   window.addEventListener('load', async () => {
     try {
       await navigator.serviceWorker.register('./sw.js');

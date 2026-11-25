@@ -106,9 +106,23 @@ svg {
 
 /* ------------------------------------------------------------------ device */
 
+/* --vv-top / --vv-h are only set while a phone keyboard is open (see lib/viewport.js);
+   then the whole app shrinks to the part of the screen still showing. */
 #stage {
   position: absolute;
-  inset: 0;
+  left: 0;
+  right: 0;
+  top: var(--vv-top, 0px);
+  height: var(--vv-h, 100%);
+}
+
+#device.is-typing {
+  --sab: 0px;
+  --bar-h: 6px;
+}
+
+#device.is-typing #homebar {
+  display: none;
 }
 
 #device {
@@ -156,7 +170,7 @@ svg {
     inset: auto;
     flex: none;
     width: 390px;
-    height: min(844px, calc(100dvh - 60px));
+    height: min(844px, calc(var(--vv-h, 100dvh) - 60px));
     border-radius: 48px;
     box-shadow:
       0 0 0 2px #2b2e35,
