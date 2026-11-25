@@ -1,0 +1,249 @@
+/* Tokens, reset, and the "device": full-bleed on a phone, a framed phone on anything wider. */
+
+:root {
+  --ink: #0e0f13;
+  --ink-2: #16181d;
+  --ink-3: #1f2228;
+  --ink-4: #2a2e36;
+  --line: rgba(255, 255, 255, 0.09);
+  --paper: #f3efe7;
+  --muted: #9c9b95;
+  --faint: #6d6d69;
+  --go: #3ee08f; /* the green "active" dot: the universal sign of appearing busy */
+  --go-ink: #06170d;
+  --warn: #ffb547;
+
+  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Instrument Serif', ui-serif, 'New York', 'Iowan Old Style', Georgia, serif;
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+  --font-round: ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --bar-h: calc(24px + var(--sab));
+
+  --ease-out: cubic-bezier(0.2, 0.9, 0.25, 1);
+  --ease-spring: cubic-bezier(0.3, 1.35, 0.5, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+html {
+  background: #050608;
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  /* Fixed so the page itself never rubber-bands or pulls to refresh. */
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #050608;
+  color: var(--paper);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.35;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+  /* Scrolling only: no pinch-zoom or double-tap zoom while mashing with two thumbs. */
+  touch-action: pan-x pan-y;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+[tabindex]:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--go);
+  outline-offset: 2px;
+}
+
+.sheet:focus-visible {
+  outline: none;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+svg {
+  display: block;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* ------------------------------------------------------------------ device */
+
+#stage {
+  position: absolute;
+  inset: 0;
+}
+
+#device {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--ink);
+  container-type: size;
+  isolation: isolate;
+}
+
+#statusbar,
+#desk-note {
+  display: none;
+}
+
+.screen,
+.app {
+  position: absolute;
+  inset: 0;
+}
+
+.app {
+  z-index: 10;
+  overflow: hidden;
+  background: #000;
+  will-change: transform, clip-path;
+}
+
+/* Wide screens: show the app as a phone, with a short note beside it. */
+@media (min-width: 620px) and (min-height: 540px) {
+  #stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(32px, 6vw, 96px);
+    padding: 24px;
+    background:
+      radial-gradient(60% 50% at 70% 40%, rgba(62, 224, 143, 0.07), transparent 70%),
+      radial-gradient(50% 60% at 20% 80%, rgba(90, 130, 255, 0.06), transparent 70%), #07080a;
+  }
+
+  #device {
+    position: relative;
+    inset: auto;
+    flex: none;
+    width: 390px;
+    height: min(844px, calc(100dvh - 60px));
+    border-radius: 48px;
+    box-shadow:
+      0 0 0 2px #2b2e35,
+      0 0 0 11px #121317,
+      0 0 0 12px #30333b,
+      0 50px 120px rgba(0, 0, 0, 0.65);
+    --sat: 48px;
+    --sab: 8px;
+  }
+
+  #statusbar {
+    position: absolute;
+    z-index: 40;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+    padding: 6px 30px 0 34px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #fff;
+  }
+
+  #statusbar .statusbar-icons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+@media (min-width: 1000px) and (min-height: 540px) {
+  #desk-note {
+    display: block;
+    width: min(340px, 30vw);
+    color: var(--muted);
+  }
+
+  .desk-title {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 64px;
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+    color: var(--paper);
+  }
+
+  .desk-lede {
+    margin-top: 18px;
+    font-size: 17px;
+    line-height: 1.5;
+    color: #c9c7c0;
+  }
+
+  .desk-list {
+    margin: 26px 0 0;
+    padding: 20px 0 0;
+    border-top: 1px solid var(--line);
+    list-style: none;
+    display: grid;
+    gap: 10px;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .desk-list kbd {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: var(--ink-3);
+    color: var(--paper);
+    border: 1px solid var(--line);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

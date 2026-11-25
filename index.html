@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no"
+    />
+    <title>Got Motion</title>
+    <meta
+      name="description"
+      content="A fake Weather app and a fake Calculator for looking occupied in awkward situations."
+    />
+    <meta name="theme-color" content="#0e0f13" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Got Motion" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  </head>
+  <body>
+    <div id="stage">
+      <aside id="desk-note" aria-hidden="true"></aside>
+      <div id="device">
+        <div id="statusbar" aria-hidden="true"></div>
+        <main id="home" class="screen"></main>
+        <section id="app-weather" class="app" aria-label="Weather" hidden></section>
+        <section id="app-calc" class="app" aria-label="Calculator" hidden></section>
+        <div id="homebar" hidden>
+          <button type="button" class="homebar-hit" aria-label="Back to home">
+            <span class="homebar-pill"></span>
+          </button>
+        </div>
+        <div id="overlays"></div>
+        <div id="banners" aria-live="polite"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
